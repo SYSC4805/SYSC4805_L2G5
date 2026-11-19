@@ -2,9 +2,11 @@
 #include <Arduino.h>
 
 void nanoInterfaceBegin();
-bool nanoIR1Event();
-bool nanoIR2Event();
-bool nanoUltrasonicEvent();
-bool nanoRangeEvent();
+
+bool nanoLeftBlocked();
+bool nanoRightBlocked();
+bool nanoFrontBlocked();
+bool nanoRearBlocked();
+
 void nanoHeartbeatUpdate();
 bool nanoHeartbeatHealthy();

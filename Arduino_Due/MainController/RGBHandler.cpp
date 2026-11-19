@@ -5,31 +5,46 @@ static RobotState displayedState = INITIALIZE;
 static bool blinkOn = true;
 static unsigned long lastBlinkMs = 0;
 
-static void setRGB(bool r, bool g, bool b) {
-  // Assumes common-cathode RGB LED.
-  digitalWrite(RGB_R_PIN, r ? HIGH : LOW);
-  digitalWrite(RGB_G_PIN, g ? HIGH : LOW);
-  digitalWrite(RGB_B_PIN, b ? HIGH : LOW);
+static void writeRGB(uint8_t r, uint8_t g, uint8_t b) {
+  analogWrite(RGB_R_PIN, r);
+  analogWrite(RGB_G_PIN, g);
+  analogWrite(RGB_B_PIN, b);
 }
 
 void rgbBegin() {
   pinMode(RGB_R_PIN, OUTPUT);
   pinMode(RGB_G_PIN, OUTPUT);
   pinMode(RGB_B_PIN, OUTPUT);
-  setRGB(false, false, false);
+  writeRGB(0, 0, 0);
 }
 
 void rgbShowState(RobotState state) {
   displayedState = state;
 
   switch (state) {
-    case INITIALIZE:           setRGB(false, false, true); break; // blue
-    case SEARCH_NAVIGATE:      setRGB(false, true, false); break; // green
-    case PLOW_CLEAR:           setRGB(true, true, true); break;    // white
-    case AVOID_OBSTACLE:       setRGB(true, true, false); break;   // yellow
-    case BOUNDARY_RECOVERY:    setRGB(true, false, true); break;   // purple
-    case LOW_BATTERY_WARNING:  break; // flashing orange in update
-    case FAULT_SAFE_STOP:      break; // flashing red in update
+    case INITIALIZE:
+      writeRGB(0, 0, 255);
+      break;
+
+    case SEARCH_NAVIGATE:
+      writeRGB(0, 255, 0);
+      break;
+
+    case PLOW_CLEAR:
+      writeRGB(255, 255, 255);
+      break;
+
+    case AVOID_OBSTACLE:
+      writeRGB(255, 255, 0);
+      break;
+
+    case BOUNDARY_RECOVERY:
+      writeRGB(255, 0, 255);
+      break;
+
+    case LOW_BATTERY_WARNING:
+    case FAULT_SAFE_STOP:
+      break;
   }
 }
 
@@ -39,15 +54,19 @@ void rgbUpdateBlink() {
     return;
   }
 
-  if (millis() - lastBlinkMs < 300) return;
+  if (millis() - lastBlinkMs < RGB_BLINK_MS) return;
+
   lastBlinkMs = millis();
   blinkOn = !blinkOn;
 
   if (!blinkOn) {
-    setRGB(false, false, false);
-  } else if (displayedState == LOW_BATTERY_WARNING) {
-    setRGB(true, true, false);  // orange approximation on digital RGB
+    writeRGB(0, 0, 0);
+    return;
+  }
+
+  if (displayedState == LOW_BATTERY_WARNING) {
+    writeRGB(255, 80, 0);
   } else {
-    setRGB(true, false, false); // red
+    writeRGB(255, 0, 0);
   }
 }

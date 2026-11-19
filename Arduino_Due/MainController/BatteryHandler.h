@@ -4,3 +4,4 @@
 void batteryBegin();
 float batteryVoltage();
 bool batteryIsLow();
+bool batteryIsCritical();
