@@ -1,31 +1,40 @@
 #include "SafetyHandler.h"
 #include "Config.h"
 
-static volatile bool eStopLatched = false;
+static volatile bool
+    emergencyLatched = false;
 
 static void emergencyStopISR() {
-  eStopLatched = true;
+  emergencyLatched = true;
 }
 
 void safetyBegin() {
-  pinMode(ESTOP_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(ESTOP_PIN), emergencyStopISR, FALLING);
+  pinMode(
+      ESTOP_PIN,
+      INPUT_PULLUP
+  );
+
+  attachInterrupt(
+      digitalPinToInterrupt(
+          ESTOP_PIN
+      ),
+      emergencyStopISR,
+      FALLING
+  );
 }
 
 bool emergencyStopActive() {
-  return eStopLatched || digitalRead(ESTOP_PIN) == LOW;
+  return (
+      emergencyLatched ||
+      digitalRead(ESTOP_PIN) == LOW
+  );
 }
 
-void safetyLatchEmergencyStop() {
-  eStopLatched = true;
-}
-
-bool safetyFaultLatched() {
-  return eStopLatched;
-}
-
-void safetyClearFaultLatch() {
-  if (digitalRead(ESTOP_PIN) == HIGH) {
-    eStopLatched = false;
+void safetyClearEmergencyStop() {
+  if (
+      digitalRead(ESTOP_PIN) ==
+      HIGH
+  ) {
+    emergencyLatched = false;
   }
 }

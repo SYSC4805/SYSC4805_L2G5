@@ -8,7 +8,11 @@ enum LineReadStatus : int8_t {
 };
 
 void lineSensorBegin();
+
 int lineSensorRaw();
+
 LineReadStatus lineSensorRead();
+
 void lineSensorSetThreshold(int threshold);
+
 int lineSensorThreshold();

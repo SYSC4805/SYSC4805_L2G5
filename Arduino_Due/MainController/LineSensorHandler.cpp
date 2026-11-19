@@ -1,7 +1,8 @@
 #include "LineSensorHandler.h"
 #include "Config.h"
 
-static int thresholdValue = DEFAULT_LINE_THRESHOLD;
+static int thresholdValue =
+    DEFAULT_LINE_THRESHOLD;
 
 void lineSensorBegin() {
   pinMode(LINE_SENSOR_PIN, INPUT);
@@ -18,11 +19,16 @@ LineReadStatus lineSensorRead() {
     return LINE_READ_ERROR;
   }
 
-  return (raw >= thresholdValue) ? LINE_BOUNDARY : LINE_CLEAR;
+  if (raw >= thresholdValue) {
+    return LINE_BOUNDARY;
+  }
+
+  return LINE_CLEAR;
 }
 
 void lineSensorSetThreshold(int threshold) {
-  thresholdValue = constrain(threshold, 0, 4095);
+  thresholdValue =
+      constrain(threshold, 0, 4095);
 }
 
 int lineSensorThreshold() {
