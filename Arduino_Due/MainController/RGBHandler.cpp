@@ -1,91 +1,149 @@
-#include "NanoInterface.h"
+#include "RGBHandler.h"
 #include "Config.h"
 
-static bool previousHeartbeat = LOW;
+static RobotState currentRgbState = INITIALIZE;
 
-static unsigned long
-    lastHeartbeatChangeMs = 0;
+static bool blinkOn = false;
+static unsigned long lastBlinkMs = 0;
 
-void nanoInterfaceBegin() {
-  pinMode(
-      NANO_IR_LEFT_PIN,
-      INPUT
-  );
 
-  pinMode(
-      NANO_IR_RIGHT_PIN,
-      INPUT
-  );
+// ============================================================
+// SET RGB
+// ============================================================
 
-  pinMode(
-      NANO_FRONT_PIN,
-      INPUT
-  );
-
-  pinMode(
-      NANO_REAR_PIN,
-      INPUT
-  );
-
-  pinMode(
-      NANO_HEARTBEAT_PIN,
-      INPUT
-  );
-
-  previousHeartbeat =
-      digitalRead(
-          NANO_HEARTBEAT_PIN
-      );
-
-  lastHeartbeatChangeMs =
-      millis();
+static void setRgb(
+    uint8_t r,
+    uint8_t g,
+    uint8_t b
+) {
+  analogWrite(RGB_R_PIN, r);
+  analogWrite(RGB_G_PIN, g);
+  analogWrite(RGB_B_PIN, b);
 }
 
-bool nanoLeftBlocked() {
-  return digitalRead(
-      NANO_IR_LEFT_PIN
-  ) == HIGH;
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+void rgbBegin() {
+
+  pinMode(RGB_R_PIN, OUTPUT);
+  pinMode(RGB_G_PIN, OUTPUT);
+  pinMode(RGB_B_PIN, OUTPUT);
+
+  setRgb(0, 0, 0);
+
+  blinkOn = false;
+  lastBlinkMs = millis();
 }
 
-bool nanoRightBlocked() {
-  return digitalRead(
-      NANO_IR_RIGHT_PIN
-  ) == HIGH;
-}
 
-bool nanoFrontBlocked() {
-  return digitalRead(
-      NANO_FRONT_PIN
-  ) == HIGH;
-}
+// ============================================================
+// DISPLAY STATE
+// ============================================================
 
-bool nanoRearBlocked() {
-  return digitalRead(
-      NANO_REAR_PIN
-  ) == HIGH;
-}
+void rgbShowState(
+    RobotState state
+) {
+  currentRgbState = state;
 
-void nanoHeartbeatUpdate() {
-  bool currentHeartbeat =
-      digitalRead(
-          NANO_HEARTBEAT_PIN
-      );
+  blinkOn = true;
+  lastBlinkMs = millis();
 
-  if (
-      currentHeartbeat !=
-      previousHeartbeat
-  ) {
-    previousHeartbeat =
-        currentHeartbeat;
+  switch (state) {
 
-    lastHeartbeatChangeMs =
-        millis();
+    case INITIALIZE:
+      // Blue
+      setRgb(0, 0, 255);
+      break;
+
+
+    case SEARCH_NAVIGATE:
+      // Green
+      setRgb(0, 255, 0);
+      break;
+
+
+    case PLOW_CLEAR:
+      // White
+      setRgb(255, 255, 255);
+      break;
+
+
+    case AVOID_OBSTACLE:
+      // Yellow
+      setRgb(255, 255, 0);
+      break;
+
+
+    case BOUNDARY_RECOVERY:
+      // Purple
+      setRgb(255, 0, 255);
+      break;
+
+
+    case LOW_BATTERY_WARNING:
+      // Flashing orange
+      setRgb(255, 80, 0);
+      break;
+
+
+    case FAULT_SAFE_STOP:
+      // Flashing red
+      setRgb(255, 0, 0);
+      break;
   }
 }
 
-bool nanoHeartbeatHealthy() {
-  return (
-      millis() -
-      lastHeartbeatChangeMs
-  ) <= NANO_HEARTBEAT_TIMEOUT_MS;
+
+// ============================================================
+// BLINKING STATES
+// ============================================================
+
+void rgbUpdateBlink() {
+
+  if (
+      currentRgbState != LOW_BATTERY_WARNING &&
+      currentRgbState != FAULT_SAFE_STOP
+  ) {
+    return;
+  }
+
+
+  if (
+      millis() - lastBlinkMs <
+      RGB_BLINK_MS
+  ) {
+    return;
+  }
+
+
+  lastBlinkMs = millis();
+
+  blinkOn = !blinkOn;
+
+
+  if (!blinkOn) {
+
+    setRgb(0, 0, 0);
+
+    return;
+  }
+
+
+  if (
+      currentRgbState ==
+      LOW_BATTERY_WARNING
+  ) {
+
+    // Orange
+    setRgb(255, 80, 0);
+  }
+
+  else {
+
+    // Red
+    setRgb(255, 0, 0);
+  }
 }
